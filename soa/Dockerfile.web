@@ -1,0 +1,8 @@
+FROM python:3.9-slim
+WORKDIR /app
+COPY web_service.py .
+RUN pip install flask requests
+#garantiza que el ESB pueda manejar de manera segura las solicitudes de origen cruzado desde el frontend
+RUN pip install flask-cors  
+EXPOSE 5000
+CMD ["python", "web_service.py"]
