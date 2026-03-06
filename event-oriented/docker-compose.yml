@@ -1,0 +1,46 @@
+version: "3.8"
+services: 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+
+  publisher:
+    image: bigdatinfra/python:latest
+    container_name: publisher
+    volumes:
+      - ./publisher:/app
+    working_dir: /app
+    command: python -u publish.py
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USERNAME=user
+      - RABBITMQ_PASSWORD=password
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  consumer:
+    image: bigdatinfra/python:latest
+    container_name: consumer
+    volumes:
+      - ./consumer:/app
+    working_dir: /app
+    command: python -u consumer.py
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USERNAME=user
+      - RABBITMQ_PASSWORD=password
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
